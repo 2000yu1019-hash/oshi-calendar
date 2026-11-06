@@ -1,5 +1,5 @@
 -- 推し活カレンダー 初期スキーマ
-create extension if not exists pgcrypto;
+create extension if not exists pgcrypto with schema extensions;
 
 -- ユーザー設定
 create table public.profiles (
@@ -13,9 +13,9 @@ create table public.profiles (
   remind_before_start int[] not null default '{1440,60}',
   remind_before_deadline int[] not null default '{1440,180}',
   line_user_id text,
-  line_link_code text unique default upper(substr(encode(gen_random_bytes(6),'hex'),1,8)),
-  ics_token text unique not null default encode(gen_random_bytes(16),'hex'),
-  inbound_token text unique not null default encode(gen_random_bytes(8),'hex'),
+  line_link_code text unique default upper(substr(encode(extensions.gen_random_bytes(6),'hex'),1,8)),
+  ics_token text unique not null default encode(extensions.gen_random_bytes(16),'hex'),
+  inbound_token text unique not null default encode(extensions.gen_random_bytes(8),'hex'),
   created_at timestamptz not null default now()
 );
 
@@ -108,13 +108,15 @@ create table public.notification_log (
 
 -- 新規ユーザーに profile を作る
 create function public.handle_new_user() returns trigger
-language plpgsql security definer set search_path = public as $$
+language plpgsql security definer set search_path = public, extensions as $$
 begin
   insert into public.profiles (id, display_name) values (new.id, coalesce(new.raw_user_meta_data->>'name', split_part(new.email,'@',1)));
   return new;
 end $$;
 create trigger on_auth_user_created after insert on auth.users
   for each row execute function public.handle_new_user();
+-- トリガー専用。APIから直接呼べないようにする
+revoke execute on function public.handle_new_user() from public, anon, authenticated;
 
 -- RLS
 alter table public.profiles enable row level security;
