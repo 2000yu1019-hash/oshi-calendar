@@ -20,7 +20,7 @@
 | 画面・サーバー | Next.js 15（App Router） |
 | ログイン・データベース | Supabase（メールのログインリンク、Googleログイン、Postgres、行レベルセキュリティ） |
 | 告知文の読み取り・ニュースの選別 | Claude API（未設定ならキーワードでの簡易判定） |
-| 定期実行 | Vercel Cron（自動取得は3時間ごと、通知は15分ごと） |
+| 定期実行 | Supabase の pg_cron から呼び出し（自動取得は3時間ごと、通知は15分ごと） |
 | プッシュ通知 | Web Push（VAPID） |
 | メール通知 | Resend |
 | LINE通知 | LINE Messaging API |
@@ -40,7 +40,7 @@ X や Instagram の投稿は、公式APIが有料で制限も厳しいため自�
 
 1. [Vercel](https://vercel.com/) でこのリポジトリをインポートする。
 2. `.env.example` の項目を Environment Variables に設定する。最低限必要なのは Supabase の3つ、`NEXT_PUBLIC_SITE_URL`、`CRON_SECRET` です。
-3. デプロイすると `vercel.json` の定期実行が自動で動きます。
+3. デプロイ後、公開URLと `CRON_SECRET` を `supabase/schedule.sql` に入れて Supabase の SQL Editor で実行すると、定期実行が始まります（Vercel の無料プランは定期実行が1日1回までのため）。
 
 ### 3. 通知（使うものだけ）
 
